@@ -1,0 +1,12 @@
+.bar {
+    fill: #4CAF50;
+}
+
+.bar:hover {
+    fill: #FF9800;
+}
+
+.axis-label {
+    font-size: 14px;
+    font-weight: bold;
+}

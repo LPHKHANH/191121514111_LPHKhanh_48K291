@@ -1,0 +1,13 @@
+.bar {
+    fill: steelblue;
+    stroke: white;
+}
+
+.bar:hover {
+    fill: orange;
+}
+
+.axis-label {
+    font-size: 14px;
+    font-weight: bold;
+}

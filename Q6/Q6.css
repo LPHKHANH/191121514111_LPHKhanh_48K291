@@ -1,0 +1,14 @@
+.line {
+    fill: none;
+    stroke: #ff5722;
+    stroke-width: 2px;
+}
+
+.circle {
+    fill: #2196F3;
+}
+
+.axis-label {
+    font-size: 14px;
+    font-weight: bold;
+}

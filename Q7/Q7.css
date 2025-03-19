@@ -1,0 +1,9 @@
+.arc path {
+    stroke: #fff;
+}
+
+.arc text {
+    font-size: 14px;
+    fill: white;
+    font-weight: bold;
+}

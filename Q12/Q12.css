@@ -1,0 +1,15 @@
+.box {
+    fill: steelblue;
+    stroke: black;
+    stroke-width: 1.5px;
+}
+
+.median-line {
+    stroke: red;
+    stroke-width: 2px;
+}
+
+.whisker {
+    stroke: black;
+    stroke-width: 1.5px;
+}
