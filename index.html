@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Data Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4682B4;
+            margin-bottom: 20px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .nav-button {
+            padding: 8px 15px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .nav-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .nav-button.active {
+            background-color: #4682B4;
+            color: white;
+            border-color: #4682B4;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 600px;
+            width: 100%;
+            display: none;
+        }
+
+        .chart-container.active {
+            display: block;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sales Data Visualization</h1>
+        
+        <div class="nav-buttons">
+            <button class="nav-button active" data-chart="q1">Q1</button>
+            <button class="nav-button" data-chart="q2">Q2</button>
+            <button class="nav-button" data-chart="q3">Q3</button>
+            <button class="nav-button" data-chart="q4">Q4</button>
+            <button class="nav-button" data-chart="q5">Q5</button>
+            <button class="nav-button" data-chart="q6">Q6</button>
+            <button class="nav-button" data-chart="q7">Q7</button>
+            <button class="nav-button" data-chart="q8">Q8</button>
+            <button class="nav-button" data-chart="q9">Q9</button>
+            <button class="nav-button" data-chart="q10">Q10</button>
+            <button class="nav-button" data-chart="q11">Q11</button>
+            <button class="nav-button" data-chart="q12">Q12</button>
+        </div>
+        
+        <!-- Chart containers -->
+        <div id="q1" class="chart-container active">
+            <h2>Doanh số bán hàng theo Mặt hàng</h2>
+            <canvas id="q1Chart"></canvas>
+        </div>
+        
+        <div id="q2" class="chart-container">
+            <h2>Doanh số bán hàng theo Nhóm hàng</h2>
+            <canvas id="q2Chart"></canvas>
+        </div>
+        
+        <div id="q3" class="chart-container">
+            <h2>Doanh số bán hàng theo Tháng</h2>
+            <canvas id="q3Chart"></canvas>
+        </div>
+        
+        <div id="q4" class="chart-container">
+            <h2>Doanh số bán hàng trung bình theo Ngày trong tuần</h2>
+            <canvas id="q4Chart"></canvas>
+        </div>
+        
+        <div id="q5" class="chart-container">
+            <h2>Doanh số bán hàng trung bình theo Ngày trong tháng</h2>
+            <canvas id="q5Chart"></canvas>
+        </div>
+        
+        <div id="q6" class="chart-container">
+            <h2>Doanh số bán hàng trung bình theo Khung giờ</h2>
+            <canvas id="q6Chart"></canvas>
+        </div>
+        
+        <div id="q7" class="chart-container">
+            <h2>Xác suất bán hàng theo Nhóm hàng</h2>
+            <canvas id="q7Chart"></canvas>
+        </div>
+        
+        <div id="q8" class="chart-container">
+            <h2>Xác suất bán hàng của Nhóm hàng theo Tháng</h2>
+            <canvas id="q8Chart"></canvas>
+        </div>
+        
+        <div id="q9" class="chart-container">
+            <h2>Xác suất bán hàng của Mặt hàng theo Nhóm hàng</h2>
+            <canvas id="q9Chart"></canvas>
+        </div>
+        
+        <div id="q10" class="chart-container">
+            <h2>Xác suất bán hàng của Mặt hàng theo Nhóm hàng trong từng Tháng</h2>
+            <canvas id="q10Chart"></canvas>
+        </div>
+        
+        <div id="q11" class="chart-container">
+            <h2>Phân phối Lượt mua hàng</h2>
+            <canvas id="q11Chart"></canvas>
+        </div>
+        
+        <div id="q12" class="chart-container">
+            <h2>Phân phối Mức chi trả của Khách hàng</h2>
+            <canvas id="q12Chart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navButtons = document.querySelectorAll('.nav-button');
+            const chartContainers = document.querySelectorAll('.chart-container');
+            
+            navButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and containers
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    chartContainers.forEach(container => container.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding container
+                    button.classList.add('active');
+                    const chartId = button.getAttribute('data-chart');
+                    document.getElementById(chartId).classList.add('active');
+                });
+            });
+            
+            // Initialize all charts
+            initializeCharts();
+        });
+
+        function initializeCharts() {
+            // Q1: Sales by Product (Horizontal Bar Chart)
+            const q1Ctx = document.getElementById('q1Chart').getContext('2d');
+            const q1Data = {
+                labels: [
+                    "[BOT01] Bột cần tây",
+                    "[THO06] Trà nhụy hoa nghệ tây",
+                    "[TTC01] Trà gừng",
+                    "[THO03] Trà hoa cúc trắng",
+                    "[TTC02] Cam lát",
+                    "[TMX01] Trà đường nhan",
+                    "[THO01] Trà nụ hoa nhài trắng",
+                    "[THO02] Trà hoa đậu biếc",
+                    "[TMX02] Trà cam sả quế",
+                    "[SET03] Set 10 gói trà hoa cúc trắng",
+                    "[SET02] Set 10 gói trà hoa đậu biếc",
+                    "[THO04] Trà nụ hoa hồng Tây Tạng",
+                    "[THO05] Trà hoa Atiso",
+                    "[TMX03] Trà gạo lứt 8 vị",
+                    "[SET01] Set 10 gói trà nụ hoa nhài trắng",
+                    "[SET05] Set 10 gói trà đường nhan",
+                    "[SET04] Set 10 gói trà gừng",
+                    "[SET07] Set 10 gói trà cam sả quế",
+                    "[SET06] Set 10 gói trà gạo lứt 8 vị",
+                ],
+                values: [
+                    626, 592, 433, 421, 367, 317, 290, 279, 250, 244, 
+                    159, 150, 144, 130, 115, 98, 80, 50, 32
+                ],
+                colors: [
+                    "#4682B4", "#E57373", "#81C784", "#E57373", "#81C784", 
+                    "#80CBC4", "#E57373", "#E57373", "#80CBC4", "#FF9800", 
+                    "#FF9800", "#E57373", "#E57373", "#80CBC4", "#FF9800", 
+                    "#FF9800", "#FF9800", "#FF9800", "#FF9800"
+                ]
+            };
+            
+            new Chart(q1Ctx, {
+                type: 'bar',
+                data: {
+                    labels: q1Data.labels,
+                    datasets: [{
+                        label: 'Doanh số (triệu VND)',
+                        data: q1Data.values,
+                        backgroundColor: q1Data.colors,
+                        borderColor: q1Data.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.x} triệu VND`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'M';
+                                }
+                            }
+                        },
+                        y: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Q2: Sales by Product Group (Horizontal Bar Chart)
+            const q2Ctx = document.getElementById('q2Chart').getContext('2d');
+            const q2Data = {
+                labels: [
+                    "[THO] Trà hoa",
+                    "[TTC] Trà cũ, quả sấy",
+                    "[SET] Set trà",
+                    "[TMX] Trà mix",
+                    "[BOT] Bột",
+                ],
+                values: [1578, 800, 778, 697, 626],
+                colors: [
+                    "#E57373", "#81C784", "#FF9800", "#80CBC4", "#4682B4"
+                ]
+            };
+            
+            new Chart(q2Ctx, {
+                type: 'bar',
+                data: {
+                    labels: q2Data.labels,
+                    datasets: [{
+                        label: 'Doanh số (triệu VND)',
+                        data: q2Data.values,
+                        backgroundColor: q2Data.colors,
+                        borderColor: q2Data.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.x} triệu VND`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'M';
+                                }
+                            }
+                        },
+                        y: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Q3: Sales by Month (Vertical Bar Chart)
+            const q3Ctx = document.getElementById('q3Chart').getContext('2d');
+            const q3Data = {
+                labels: [
+                    "Tháng 01", "Tháng 02", "Tháng 03", "Tháng 04", "Tháng 05", "Tháng 06", 
+                    "Tháng 07", "Tháng 08", "Tháng 09", "Tháng 10", "Tháng 11", "Tháng 12"
+                ],
+                values: [
+                    284, 295, 340, 196, 213, 210, 
+                    327, 382, 421, 480, 520, 750
+                ],
+                colors: [
+                    "#5D4037", "#9E9E9E", "#E91E63", "#F48FB1", "#9C27B0", "#CE93D8", 
+                    "#795548", "#A1887F", "#009688", "#80CBC4", "#F44336", "#EF9A9A"
+                ]
+            };
+            
+            new Chart(q3Ctx, {
+                type: 'bar',
+                data: {
+                    labels: q3Data.labels,
+                    datasets: [{
+                        label: 'Doanh số (triệu VND)',
+                        data: q3Data.values,
+                        backgroundColor: q3Data.colors,
+                        borderColor: q3Data.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y} triệu VND`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Q4: Average Sales by Day of Week (Vertical Bar Chart)
+            const q4Ctx = document.getElementById('q4Chart').getContext('2d');
+            const q4Data = {
+                labels: [
+                    "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"
+                ],
+                values: [
+                    11.86, 11.93, 12.32, 12.86, 14.13, 14.85, 13.76
+                ],
+                colors: [
+                    "#4682B4", "#FF9800", "#E57373", "#80CBC4", "#81C784", "#FFD54F", "#CE93D8"
+                ]
+            };
+            
+            new Chart(q4Ctx, {
+                type: 'bar',
+                data: {
+                    labels: q4Data.labels,
+                    datasets: [{
+                        label: 'Doanh số (triệu VND)',
+                        data: q4Data.values,
+                        backgroundColor: q4Data.colors,
+                        borderColor: q4Data.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y} triệu VND`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Q5: Average Sales by Day of Month (Vertical Bar Chart)
+            const q5Ctx = document.getElementById('q5Chart').getContext('2d');
+            
+            // Generate sample data for 31 days with random values between 12 and 15
+            const q5Labels = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+            const q5Values = Array.from({ length: 31 }, () => (Math.random() * 3 + 12).toFixed(1));
+            
+            // Generate colors for each bar
+            const q5Colors = Array(31).fill().map(() => {
+                const colorPool = [
+                    "#4682B4", "#FF9800", "#81C784", "#FFD54F", "#E57373", 
+                    "#CE93D8", "#80CBC4", "#FFAB91", "#9FA8DA", "#F48FB1"
+                ];
+                return colorPool[Math.floor(Math.random() * colorPool.length)];
+            });
+            
+            new Chart(q5Ctx, {
+                type: 'bar',
+                data: {
+                    labels: q5Labels,
+                    datasets: [{
+                        label: 'Doanh số (triệu VND)',
+                        data: q5Values,
+                        backgroundColor: q5Colors,
+                        borderColor: q5Colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y} triệu VND`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Q6: Average Sales by Time Frame (Vertical Bar Chart)
+            const q6Ctx = document.getElementById('q6Chart').getContext('2d');
+            const q6Data = {
+                labels: [
+                    "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00", 
+                    "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", 
+                    "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00", 
+                    "20:00-21:00", "21:00-22:00", "22:00-23:00", "23:00-00:00"
+                ],
+                values: [
+                    27.11, 26.22, 30.65, 29.04, 37.78, 27.35, 28.57, 28.43, 
+                    34.17, 32.08, 40.05, 39.02, 36.23, 35.85, 36.27, 36.25
+                ],
+                colors: [
+                    "#4682B4", "#80B1D3", "#FF9800", "#FFCC80", "#81C784", "#C5E1A5", 
+                    "#D4B157", "#F7DC6F", "#26A69A", "#80CBC4", "#E57373", "#EF9A9A", 
+                    "#A1887F", "#D7CCC8", "#EC407A", "#F8BBD0"
+                ]
+            };
+            
+            new Chart(q6Ctx, {
+                type: 'bar',
+                data: {
+                    labels: q6Data.labels,
+                    datasets: [{
+                        label: 'Doanh số (triệu VND)',
+                        data: q6Data.values,
+                        backgroundColor: q6Data.colors,
+                        borderColor: q6Data.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y} triệu VND`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Q7: Sales Probability by Product Group (Horizontal Bar Chart)
+            const q7Ctx = document.getElementById('q7Chart').getContext('2d');
+            const q7Data = {
+                labels: [
+                    "[TMX] Trà mix",
+                    "[THO] Trà hoa",
+                    "[TTC] Trà cũ, quả sấy",
+                    "[BOT] Bột",
+                    "[SET] Set trà"
+                ],
+                values: [54.5, 54.4, 53.3, 40.3, 23.9],
+                colors: [
+                    "#80CBC4", "#E57373", "#81C784", "#4682B4", "#FF9800"
+                ]
+            };
+            
+            new Chart(q7Ctx, {
+                type: 'bar',
+                data: {
+                    labels: q7Data.labels,
+                    datasets: [{
+                        label: 'Xác suất (%)',
+                        data: q7Data.values,
+                        backgroundColor: q7Data.colors,
+                        borderColor: q7Data.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.x}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            max: 60
+                        },
+                        y: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Q8: Sales Probability of Product Groups by Month (Line Chart)
+            const q8Ctx = document.getElementById('q8Chart').getContext('2d');
+            const q8Months = [
+                "Tháng 01", "Tháng 02", "Tháng 03", "Tháng 04", "Tháng 05", "Tháng 06", 
+                "Tháng 07", "Tháng 08", "Tháng 09", "Tháng 10", "Tháng 11", "Tháng 12"
+            ];
+            
+            new Chart(q8Ctx, {
+                type: 'line',
+                data: {
+                    labels: q8Months,
+                    datasets: [
+                        {
+                            label: "[BOT] Bột",
+                            data: [39.5, 33, 33.2, 34.3, 35.2, 35.5, 38, 37.2, 40, 45.5, 54, 40],
+                            borderColor: "#4682B4",
+                            backgroundColor: "rgba(70, 130, 180, 0.1)",
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: "[SET] Set trà",
+                            data: [34, 25, 23.2, 23.5, 25.3, 24.2, 22.8, 24, 21, 21.2, 21, 26.5],
+                            borderColor: "#FF9800",
+                            backgroundColor: "rgba(255, 152, 0, 0.1)",
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: "[THO] Trà hoa",
+                            data: [49, 51, 51.2, 61.2, 59, 67.5, 68, 64, 52.5, 52, 51.5, 51],
+                            borderColor: "#E57373",
+                            backgroundColor: "rgba(229, 115, 115, 0.1)",
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: "[TMX] Trà mix",
+                            data: [47.5, 48, 54.5, 52.5, 48.5, 65, 64.5, 64, 54, 57.5, 54, 49.5],
+                            borderColor: "#80CBC4",
+                            backgroundColor: "rgba(128, 203, 196, 0.1)",
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: "[TTC] Trà cũ, quả sấy",
+                            data: [54, 48, 45.2, 45.5, 45.3, 45.5, 45.5, 45, 53, 58.5, 68, 59],
+                            borderColor: "#81C784",
+                            backgroundColor: "rgba(129, 199, 132, 0.1)",
+                            tension: 0.3,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: true,
+                                color: "rgba(0, 0, 0, 0.05)"
+                            }
+                        },
+                        y: {
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            min: 20,
+                            max: 70
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+
+            // Q9: Sales Probability of Products by Product Group (Custom Canvas)
+            const q9Canvas = document.getElementById('q9Chart');
+            const q9Ctx = q9Canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            q9Canvas.width = 800;
+            q9Canvas.height = 600;
+            
+            // Draw Q9 chart (custom canvas drawing)
+            function drawQ9Chart() {
+                // Clear canvas
+                q9Ctx.clearRect(0, 0, q9Canvas.width, q9Canvas.height);
+                
+                // Set dimensions
+                const padding = { top: 60, right: 20, bottom: 40, left: 20 };
+                const chartWidth = q9Canvas.width - padding.left - padding.right;
+                const chartHeight = q9Canvas.height - padding.top - padding.bottom;
+                
+                // Draw title
+                q9Ctx.fillStyle = "#4682B4";
+                q9Ctx.font = "18px Arial";
+                q9Ctx.textAlign = "center";
+                q9Ctx.fillText("Xác suất bán hàng của Mặt hàng theo Nhóm hàng", q9Canvas.width / 2, 30);
+                
+                // Define sections
+                const sections = [
+                    {
+                        title: "[BOT] Bột",
+                        color: "#4682B4",
+                        data: [{ label: "BOT01 Bột cần tây", value: 100, color: "#26A69A" }]
+                    },
+                    {
+                        title: "[SET] Set trà",
+                        color: "#FF9800",
+                        data: [
+                            { label: "SET01 Set 10 gói trà hoa cúc trắng", value: 21.5, color: "#7E57C2" },
+                            { label: "SET02 Set 10 gói trà gạo lứt", value: 20.8, color: "#FF7043" },
+                            { label: "SET03 Set 10 gói trà đường nhan", value: 19.6, color: "#9CCC65" },
+                            { label: "SET04 Set 10 gói trà hoa đậu biếc", value: 15.7, color: "#78909C" },
+                            { label: "SET05 Set 10 gói trà cam sả quế", value: 12.5, color: "#FF8A65" },
+                            { label: "SET06 Set 10 gói trà nụ hoa nhài", value: 9.9, color: "#9575CD" }
+                        ]
+                    },
+                    {
+                        title: "[THO] Trà hoa",
+                        color: "#E57373",
+                        data: [
+                            { label: "THO01 Trà hoa cúc trắng", value: 28.7, color: "#42A5F5" },
+                            { label: "THO02 Trà nụ hoa nhài trắng", value: 25.7, color: "#66BB6A" },
+                            { label: "THO03 Trà hoa đậu biếc", value: 22.1, color: "#FFA726" },
+                            { label: "THO04 Trà hoa Atiso", value: 16.1, color: "#EC407A" },
+                            { label: "THO05 Trà hoa hồng Tây Tạng", value: 14.6, color: "#AB47BC" }
+                        ]
+                    },
+                    {
+                        title: "[TMX] Trà mix",
+                        color: "#80CBC4",
+                        data: [
+                            { label: "TMX01 Trà đường nhan", value: 46.5, color: "#78909C" },
+                            { label: "TMX02 Trà gạo lứt 8 vị", value: 38.7, color: "#81D4FA" },
+                            { label: "TMX03 Trà cam sả quế", value: 15.0, color: "#FFCC80" }
+                        ]
+                    },
+                    {
+                        title: "[TTC] Trà cũ, quả sấy",
+                        color: "#81C784",
+                        data: [
+                            { label: "TTC01 Trà gừng", value: 56.5, color: "#EF5350" },
+                            { label: "TTC02 Cam lát", value: 43.5, color: "#5C6BC0" }
+                        ]
+                    }
+                ];
+                
+                // Calculate section dimensions
+                const sectionWidth = chartWidth / 3;
+                const sectionHeight = chartHeight / 2;
+                
+                // Draw each section
+                sections.forEach((section, index) => {
+                    const row = Math.floor(index / 3);
+                    const col = index % 3;
+                    const x = padding.left + col * sectionWidth;
+                    const y = padding.top + row * sectionHeight;
+                    
+                    // Draw section title
+                    q9Ctx.fillStyle = section.color;
+                    q9Ctx.font = "bold 14px Arial";
+                    q9Ctx.textAlign = "center";
+                    q9Ctx.fillText(section.title, x + sectionWidth / 2, y + 20);
+                    
+                    // Draw section bars
+                    const barAreaHeight = sectionHeight - 40;
+                    const barWidth = sectionWidth * 0.8;
+                    const barStartX = x + (sectionWidth - barWidth) / 2;
+                    const maxBarHeight = barAreaHeight * 0.8;
+                    const barSpacing = 5;
+                    const totalBars = section.data.length;
+                    const individualBarWidth = (barWidth - (totalBars - 1) * barSpacing) / totalBars;
+                    
+                    // Draw x-axis
+                    q9Ctx.beginPath();
+                    q9Ctx.moveTo(x + sectionWidth * 0.1, y + sectionHeight - 20);
+                    q9Ctx.lineTo(x + sectionWidth * 0.9, y + sectionHeight - 20);
+                    q9Ctx.strokeStyle = "#ccc";
+                    q9Ctx.stroke();
+                    
+                    // Draw 0%, 50%, 100% markers
+                    q9Ctx.fillStyle = "#666";
+                    q9Ctx.font = "10px Arial";
+                    q9Ctx.textAlign = "left";
+                    q9Ctx.fillText("0%", x + sectionWidth * 0.1, y + sectionHeight - 10);
+                    q9Ctx.textAlign = "center";
+                    q9Ctx.fillText("50%", x + sectionWidth * 0.5, y + sectionHeight - 10);
+                    q9Ctx.textAlign = "right";
+                    q9Ctx.fillText("100%", x + sectionWidth * 0.9, y + sectionHeight - 10);
+                    
+                    // Draw bars
+                    section.data.forEach((item, i) => {
+                        const barHeight = (item.value / 100) * maxBarHeight;
+                        const barX = barStartX + i * (individualBarWidth + barSpacing);
+                        const barY = y + sectionHeight - 20 - barHeight;
+                        
+                        // Draw bar
+                        q9Ctx.fillStyle = item.color;
+                        q9Ctx.fillRect(barX, barY, individualBarWidth, barHeight);
+                        
+                        // Draw value
+                        q9Ctx.fillStyle = "#000";
+                        q9Ctx.font = "10px Arial";
+                        q9Ctx.textAlign = "center";
+                        q9Ctx.fillText(`${item.value}%`, barX + individualBarWidth / 2, barY - 5);
+                        
+                        // Draw label (rotated for space)
+                        q9Ctx.save();
+                        q9Ctx.translate(barX + individualBarWidth / 2, y + sectionHeight - 25);
+                        q9Ctx.rotate(-Math.PI / 4);
+                        q9Ctx.fillStyle = "#333";
+                        q9Ctx.font = "8px Arial";
+                        q9Ctx.textAlign = "right";
+                        q9Ctx.fillText(item.label.substring(0, 15), 0, 0);
+                        q9Ctx.restore();
+                    });
+                });
+            }
+            
+            // Draw Q9 chart initially
+            drawQ9Chart();
+            
+            // Redraw on window resize
+            window.addEventListener('resize', function() {
+                drawQ9Chart();
+            });
+
+            // Q10: Sales Probability of Products by Product Group for Each Month (Custom Canvas)
+            const q10Canvas = document.getElementById('q10Chart');
+            const q10Ctx = q10Canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            q10Canvas.width = 800;
+            q10Canvas.height = 600;
+            
+            // Draw Q10 chart (custom canvas drawing)
+            function drawQ10Chart() {
+                // Clear canvas
+                q10Ctx.clearRect(0, 0, q10Canvas.width, q10Canvas.height);
+                
+                // Set dimensions
+                const padding = { top: 60, right: 20, bottom: 20, left: 20 };
+                const chartWidth = q10Canvas.width - padding.left - padding.right;
+                const chartHeight = q10Canvas.height - padding.top - padding.bottom;
+                
+                // Draw title
+                q10Ctx.fillStyle = "#4682B4";
+                q10Ctx.fillRect(0, 0, q10Canvas.width, 50);
+                q10Ctx.fillStyle = "#fff";
+                q10Ctx.font = "18px Arial";
+                q10Ctx.textAlign = "center";
+                q10Ctx.fillText("Xác suất bán hàng của Mặt hàng theo Nhóm hàng trong từng Tháng", q10Canvas.width / 2, 30);
+                
+                // Define panels
+                const panels = [
+                    {
+                        title: "Tout",
+                        data: [
+                            { label: "T07", value: 100 },
+                            { label: "T08", value: 100 },
+                            { label: "T09", value: 100 },
+                            { label: "T10", value: 100 },
+                            { label: "T11", value: 100 },
+                            { label: "T12", value: 100 }
+                        ],
+                        yMin: 90,
+                        yMax: 110
+                    },
+                    {
+                        title: "[SET] Set trà",
+                        data: [
+                            { 
+                                label: "SET01",
+                                values: [15, 13, 12, 15, 15, 16],
+                                color: "#7E57C2"
+                            },
+                            { 
+                                label: "SET02",
+                                values: [11, 14, 12, 13, 12, 12],
+                                color: "#FF7043"
+                            },
+                            { 
+                                label: "SET03",
+                                values: [20, 19, 21, 21, 21, 22],
+                                color: "#9CCC65"
+                            },
+                            { 
+                                label: "SET04",
+                                values: [18, 22, 19, 19, 19, 20],
+                                color: "#78909C"
+                            }
+                        ],
+                        yMin: 8,
+                        yMax: 25
+                    },
+                    {
+                        title: "[THO] Trà hoa",
+                        data: [
+                            { 
+                                label: "THO01",
+                                values: [28, 24, 24, 24, 24, 24],
+                                color: "#42A5F5"
+                            },
+                            { 
+                                label: "THO02",
+                                values: [17, 20, 19, 19, 19, 18],
+                                color: "#66BB6A"
+                            },
+                            { 
+                                label: "THO03",
+                                values: [32, 29, 28, 28, 28, 28],
+                                color: "#FFA726"
+                            },
+                            { 
+                                label: "THO04",
+                                values: [16, 15, 14, 15, 15, 15],
+                                color: "#EC407A"
+                            }
+                        ],
+                        yMin: 14,
+                        yMax: 32
+                    },
+                    {
+                        title: "[TMX] Trà mix",
+                        data: [
+                            { 
+                                label: "TMX01",
+                                values: [47, 48, 46, 46, 45, 45],
+                                color: "#78909C"
+                            },
+                            { 
+                                label: "TMX02",
+                                values: [37, 38, 35, 39, 37, 35],
+                                color: "#81D4FA"
+                            },
+                            { 
+                                label: "TMX03",
+                                values: [41, 40, 37, 38, 37, 37],
+                                color: "#FFCC80"
+                            }
+                        ],
+                        yMin: 30,
+                        yMax: 50
+                    },
+                    {
+                        title: "[TTC] Trà cũ, quả sấy",
+                        data: [
+                            { 
+                                label: "TTC01",
+                                values: [68, 68, 70, 70, 75, 74],
+                                color: "#EF5350"
+                            },
+                            { 
+                                label: "TTC02",
+                                values: [42, 43, 42, 47, 45, 44],
+                                color: "#5C6BC0"
+                            }
+                        ],
+                        yMin: 35,
+                        yMax: 75
+                    }
+                ];
+                
+                // Calculate panel dimensions
+                const panelWidth = chartWidth / 3;
+                const panelHeight = chartHeight / 2;
+                
+                // Draw each panel
+                panels.forEach((panel, index) => {
+                    const row = Math.floor(index / 3);
+                    const col = index % 3;
+                    const x = padding.left + col * panelWidth;
+                    const y = padding.top + row * panelHeight;
+                    
+                    // Draw panel title
+                    q10Ctx.fillStyle = "#4682B4";
+                    q10Ctx.font = "bold 14px Arial";
+                    q10Ctx.textAlign = "center";
+                    q10Ctx.fillText(panel.title, x + panelWidth / 2, y + 20);
+                    
+                    // Draw panel chart area
+                    const chartAreaHeight = panelHeight - 40;
+                    const chartAreaWidth = panelWidth * 0.9;
+                    const chartStartX = x + (panelWidth - chartAreaWidth) / 2;
+                    const chartStartY = y + 30;
+                    
+                    // Draw axes
+                    q10Ctx.beginPath();
+                    q10Ctx.moveTo(chartStartX, chartStartY);
+                    q10Ctx.lineTo(chartStartX, chartStartY + chartAreaHeight);
+                    q10Ctx.lineTo(chartStartX + chartAreaWidth, chartStartY + chartAreaHeight);
+                    q10Ctx.strokeStyle = "#ccc";
+                    q10Ctx.stroke();
+                    
+                    // Draw y-axis labels
+                    q10Ctx.fillStyle = "#666";
+                    q10Ctx.font = "10px Arial";
+                    q10Ctx.textAlign = "right";
+                    q10Ctx.fillText(`${panel.yMax}%`, chartStartX - 5, chartStartY + 10);
+                    q10Ctx.fillText(`${panel.yMin}%`, chartStartX - 5, chartStartY + chartAreaHeight - 10);
+                    
+                    // Draw x-axis labels
+                    const months = ["T07", "T08", "T09", "T10", "T11", "T12"];
+                    const xStep = chartAreaWidth / (months.length - 1);
+                    
+                    months.forEach((month, i) => {
+                        const xPos = chartStartX + i * xStep;
+                        q10Ctx.fillStyle = "#666";
+                        q10Ctx.font = "10px Arial";
+                        q10Ctx.textAlign = "center";
+                        q10Ctx.fillText(month, xPos, chartStartY + chartAreaHeight + 15);
+                        
+                        // Draw vertical grid lines
+                        q10Ctx.beginPath();
+                        q10Ctx.moveTo(xPos, chartStartY);
+                        q10Ctx.lineTo(xPos, chartStartY + chartAreaHeight);
+                        q10Ctx.strokeStyle = "#eee";
+                        q10Ctx.stroke();
+                    });
+                    
+                    // Draw data lines
+                    if (index === 0) {
+                        // Special case for "Tout" panel - just a straight line at 100%
+                        q10Ctx.beginPath();
+                        q10Ctx.moveTo(chartStartX, chartStartY + chartAreaHeight * 0.5);
+                        q10Ctx.lineTo(chartStartX + chartAreaWidth, chartStartY + chartAreaHeight * 0.5);
+                        q10Ctx.strokeStyle = "#4682B4";
+                        q10Ctx.lineWidth = 2;
+                        q10Ctx.stroke();
+                        q10Ctx.lineWidth = 1;
+                    } else {
+                        // Draw lines for each data series
+                        panel.data.forEach(series => {
+                            q10Ctx.beginPath();
+                            series.values.forEach((value, i) => {
+                                const xPos = chartStartX + i * xStep;
+                                const yPos = chartStartY + chartAreaHeight - ((value - panel.yMin) / (panel.yMax - panel.yMin)) * chartAreaHeight;
+                                
+                                if (i === 0) {
+                                    q10Ctx.moveTo(xPos, yPos);
+                                } else {
+                                    q10Ctx.lineTo(xPos, yPos);
+                                }
+                            });
+                            q10Ctx.strokeStyle = series.color;
+                            q10Ctx.lineWidth = 2;
+                            q10Ctx.stroke();
+                            q10Ctx.lineWidth = 1;
+                            
+                            // Draw points
+                            series.values.forEach((value, i) => {
+                                const xPos = chartStartX + i * xStep;
+                                const yPos = chartStartY + chartAreaHeight - ((value - panel.yMin) / (panel.yMax - panel.yMin)) * chartAreaHeight;
+                                
+                                q10Ctx.beginPath();
+                                q10Ctx.arc(xPos, yPos, 3, 0, Math.PI * 2);
+                                q10Ctx.fillStyle = series.color;
+                                q10Ctx.fill();
+                            });
+                            
+                            // Draw label
+                            const lastValue = series.values[series.values.length - 1];
+                            const xPos = chartStartX + chartAreaWidth + 5;
+                            const yPos = chartStartY + chartAreaHeight - ((lastValue - panel.yMin) / (panel.yMax - panel.yMin)) * chartAreaHeight;
+                            q10Ctx.fillStyle = series.color;
+                            q10Ctx.font = "10px Arial";
+                            q10Ctx.textAlign = "left";
+                            q10Ctx.fillText(series.label, xPos, yPos + 3);
+                        });
+                    }
+                });
+            }
+            
+            // Draw Q10 chart initially
+            drawQ10Chart();
+            
+            // Redraw on window resize
+            window.addEventListener('resize', function() {
+                drawQ10Chart();
+            });
+
+            // Q11: Distribution of Purchase Frequency (Vertical Bar Chart)
+            const q11Ctx = document.getElementById('q11Chart').getContext('2d');
+            
+            // Sample data based on the image
+            const q11Data = {
+                labels: Array.from({ length: 22 }, (_, i) => (i + 1).toString()),
+                values: [
+                    4850, 1200, 800, 650, 420, 330, 250, 180, 150, 110, 
+                    90, 70, 60, 50, 40, 35, 30, 25, 20, 15, 10, 5
+                ]
+            };
+            
+            new Chart(q11Ctx, {
+                type: 'bar',
+                data: {
+                    labels: q11Data.labels,
+                    datasets: [{
+                        label: 'Số lượt mua hàng',
+                        data: q11Data.values,
+                        backgroundColor: '#4682B4',
+                        borderColor: '#4682B4',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y} khách hàng`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Số lượt mua hàng'
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Số khách hàng'
+                            },
+                            grid: { display: true },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000) {
+                                        return value / 1000 + 'k';
+                                    }
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Q12: Distribution of Customer Payment Amounts (Vertical Bar Chart)
+            const q12Ctx = document.getElementById('q12Chart').getContext('2d');
+            
+            // Generate sample data based on the image
+            const priceRanges = [];
+            const values = [];
+            
+            // Generate price ranges (x-axis labels)
+            for (let i = 0; i < 100; i++) {
+                priceRanges.push(`${i * 10}k`);
+            }
+            
+            // Generate decreasing values with a long tail distribution
+            values.push(1500); // First bar is highest
+            values.push(1150);
+            values.push(1100);
+            values.push(950);
+            values.push(750);
+            values.push(650);
+            values.push(550);
+            values.push(450);
+            values.push(380);
+            values.push(320);
+            
+            // Add decreasing values for the rest
+            for (let i = 10; i < 100; i++) {
+                // Exponential decay formula
+                const value = Math.round(300 * Math.exp(-0.1 * (i - 10)));
+                values.push(value);
+            }
+            
+            new Chart(q12Ctx, {
+                type: 'bar',
+                data: {
+                    labels: priceRanges,
+                    datasets: [{
+                        label: 'Số khách hàng',
+                        data: values,
+                        backgroundColor: '#4682B4',
+                        borderColor: '#4682B4',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y} khách hàng`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Mức chi trả (nghìn VND)'
+                            },
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 90,
+                                minRotation: 90,
+                                autoSkip: true,
+                                maxTicksLimit: 20
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Số khách hàng'
+                            },
+                            grid: { display: true }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
